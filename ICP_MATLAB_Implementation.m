@@ -1,8 +1,8 @@
 close all
 clear all
 clc
-ptCloudRef = pcread('bun045 (1).ply');
-ptCloudCurrent = pcread('bun090 (1).ply');
+ptCloudRef = pcread('bun045.ply');
+ptCloudCurrent = pcread('bun090.ply');
 % pcshowpair(ptCloudRef,ptCloudCurrent);
 % clear data
 ptCloudRef = pcdenoise(ptCloudRef);
@@ -23,7 +23,7 @@ ptCloud2 = pointCloud(ptCloudRef.Location);
 
 % Running the ICP-algorithm. Least squares criterion
 
-[RotMat,TransVec,dataOut]=ICP_NEW(model,data);
+[RotMat,TransVec,dataOut]=custom_icp(model,data);
 
 % Reference:
 %
