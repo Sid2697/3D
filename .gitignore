@@ -2,3 +2,5 @@
 venv/
 *.mat
 *.DS_Store
+*.pyc
+__pycache__/
