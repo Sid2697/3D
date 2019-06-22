@@ -35,3 +35,10 @@ moving_variance = helper.variance(moving_numpy)
 
 print('Static centroid', static_centroid, 'Moving centroid', moving_centroid)
 print("Static Variance ", static_variance,  "Moving Variance ", moving_variance)
+
+covariance = helper.covariance(static_numpy, moving_numpy)
+
+print("Covariance is: ", covariance)
+
+loader.data_matlab(static_cloud, 'Static')
+loader.data_matlab(moving_cloud, 'Moving')
