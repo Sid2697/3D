@@ -3,7 +3,7 @@ from scipy.io import savemat
 from tqdm import tqdm
 import open3d as o3d
 import numpy as np
-import pptk
+# import pptk
 
 
 def display_ugly(file_path):

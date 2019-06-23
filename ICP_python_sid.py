@@ -1,7 +1,7 @@
 # This file contains custom implementation for ICP algorithm
-import helper_functions as helper
-import data_loader as loader
-import config as cfg
+import Helper.helper_functions as helper
+import Helper.data_loader as loader
+import Helper.config as cfg
 
 # Loading two point clouds
 
@@ -9,8 +9,8 @@ if cfg.USER is True:
     static_cloud = str(input('Enter the path to the static point cloud: '))
     moving_cloud = str(input('Enter the path to the moving point cloud: '))
 else:
-    static_cloud = '/Volumes/Siddhant/3D_Data/bunnyfiles/bun000.ply'
-    moving_cloud = '/Volumes/Siddhant/3D_Data/bunnyfiles/bun090.ply'
+    static_cloud = 'Data/bun000.ply'
+    moving_cloud = 'Data/bun090.ply'
 
 # Visualizing the input clouds
 if cfg.VISUAL is True:
@@ -39,6 +39,3 @@ print("Static Variance ", static_variance,  "Moving Variance ", moving_variance)
 covariance = helper.covariance(static_numpy, moving_numpy)
 
 print("Covariance is: ", covariance)
-
-loader.data_matlab(static_cloud, 'Static')
-loader.data_matlab(moving_cloud, 'Moving')
