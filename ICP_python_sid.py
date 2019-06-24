@@ -3,7 +3,6 @@ import Helper.helper_functions as helper
 import Helper.data_loader as loader
 import Helper.config as cfg
 
-# Loading two point clouds
 
 if cfg.USER is True:
     static_cloud = str(input('Enter the path to the static point cloud: '))
@@ -22,20 +21,8 @@ if cfg.VISUAL is True:
 else:
     print('[INFO] Data not visualized.')
 
-static_numpy = loader.data_numpy(static_cloud)
-moving_numpy = loader.data_numpy(moving_cloud)
+static_numpy = loader.down_sampled_numpy(static_cloud)
+moving_numpy = loader.down_sampled_numpy(moving_cloud)
 
-static_centroid = helper.centroid(static_numpy)
-moving_centroid = helper.centroid(moving_numpy)
-
-# print("Difference: ", static_centroid - moving_centroid)
-
-static_variance = helper.variance(static_numpy)
-moving_variance = helper.variance(moving_numpy)
-
-print('Static centroid', static_centroid, 'Moving centroid', moving_centroid)
-print("Static Variance ", static_variance,  "Moving Variance ", moving_variance)
-
-covariance = helper.covariance(static_numpy, moving_numpy)
-
-print("Covariance is: ", covariance)
+point, minimum = helper.find_min_distance_point(moving_numpy[0], static_numpy)
+print("Minimum distance is {}, point is {}".format(minimum, point))

@@ -3,7 +3,7 @@ from scipy.io import savemat
 from tqdm import tqdm
 import open3d as o3d
 import numpy as np
-# import pptk
+import pptk
 
 
 def display_ugly(file_path):
@@ -37,6 +37,16 @@ def data_numpy(file_path):
     point_cloud = o3d.io.read_point_cloud(file_path)
     point_cloud_numpy = np.asarray(point_cloud.points)
     return point_cloud_numpy
+
+
+def down_sampled_numpy(cloud):
+    """
+    This method is used to get the down sampled point cloud
+    :param cloud: Point cloud which is to be down sampled [type: point cloud]
+    :return: down sampled point cloud [type: numpy asarry]
+    """
+    down = o3d.voxel_down_sample(o3d.io.read_point_cloud(cloud), voxel_size=0.009)
+    return np.asarray(down.points)
 
 
 def data_matlab(file_path, file_name):

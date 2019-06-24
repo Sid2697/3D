@@ -42,3 +42,44 @@ def covariance(point_cloud_1, point_cloud_2):
         diff_2 = point_cloud_2[i] - centroid_point_cloud_2
         prod += diff_1 * diff_2
     return prod/(min_len - 1)
+
+
+def inner_product(vector_1, vector_2):
+    """
+    This method takes in 2 vectors and calculates the dot product
+    :param vector_1: First vector whose dot product is to be calculated
+    :param vector_2: Second vector whose dot product is to be calculated
+    :return: dot product between vector_1 and vector_2
+    """
+    vector_1_transpose = np.transpose(vector_1)
+    return np.dot(vector_1_transpose, vector_2)
+
+
+def euclidean_distance(point_1, point_2):
+    """
+    This method is used to calculate Euclidean distance between 2 3D points
+    :param point_1: First point from whom distance is to be calculated
+    :param point_2: Second point till which the distance is to be calculated
+    :return: Distance between point_1 and point_2
+    """
+    diff = point_1 - point_2
+    squared = np.square(diff)
+    summed = np.sum(squared)
+    return np.sqrt(summed)
+
+
+def find_min_distance_point(moving_point, static_numpy):
+    """
+    This method takes finds the corresponding point for a moving point cloud in static point cloud
+    :param moving_point: point from moving cloud whose correspondence is to be found in static point cloud
+    :param static_numpy: point cloud in which corresponding point is to be calculated
+    :return: point with the min distance and distance between them
+    """
+    minimum, distance = np.inf, np.inf
+    point = 0
+    for i in range(len(static_numpy)):
+        distance = euclidean_distance(static_numpy[i], moving_point)
+        if distance < minimum:
+            minimum = distance
+            point = static_numpy[i]
+    return point, distance
