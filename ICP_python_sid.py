@@ -2,6 +2,7 @@
 import Helper.helper_functions as helper
 import Helper.data_loader as loader
 import Helper.config as cfg
+from tqdm import tqdm
 
 
 if cfg.USER is True:
@@ -24,5 +25,8 @@ else:
 static_numpy = loader.down_sampled_numpy(static_cloud)
 moving_numpy = loader.down_sampled_numpy(moving_cloud)
 
-point, minimum = helper.find_min_distance_point(moving_numpy[0], static_numpy)
-print("Minimum distance is {}, point is {}".format(minimum, point))
+corresponding_points_dict = {}
+
+for i in tqdm(range(len(moving_numpy))):
+    point, minimum = helper.find_min_distance_point(moving_numpy[i], static_numpy)
+    corresponding_points_dict[i] = [point, moving_numpy[i], minimum]
