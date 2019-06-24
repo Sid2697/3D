@@ -83,3 +83,7 @@ def find_min_distance_point(moving_point, static_numpy):
             minimum = distance
             point = static_numpy[i]
     return point, distance
+
+def dot_product(p_i_dash,y_i_dash,a,b):  
+    dot_prod = np.dot(p_i_dash[:,a], y_i_dash[:,b])
+    return dot_prod
