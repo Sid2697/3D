@@ -2,11 +2,11 @@
 import open3d as o3d
 import numpy as np
 import pptk
-import pandas as pd
-import rope
-E =[]
-P =[]
-Q=[]
+
+
+#E =[]
+#P =[]
+#Q=[]
 print("Testing IO for point cloud")
 pcd1 = o3d.io.read_point_cloud("bun045.ply")
 print(pcd1)
@@ -59,11 +59,7 @@ data1_centroid = data1 - mean_data1
 data2_centroid = data2 - mean_data2
 #z_avg_data3 = Average(data1_centroid[:,2])
 #for i in range(0, len(x_data1)-1):
-A = [1,2,3]
-C = np.float64(A)
 
-B = [11,12,13]
-D = np.float64(B)
 dist = np.linalg.norm(data1_centroid[1,:]-data2_centroid[1,:])
 dist2 = np.linalg.norm(C-D)
 
