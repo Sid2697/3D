@@ -61,7 +61,7 @@ data2_centroid = data2 - mean_data2
 #for i in range(0, len(x_data1)-1):
 
 dist = np.linalg.norm(data1_centroid[1,:]-data2_centroid[1,:])
-dist2 = np.linalg.norm(C-D)
+
 
 
 # =============================================================================
