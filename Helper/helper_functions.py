@@ -1,4 +1,4 @@
-# This file contains helper functions for supporting ICP
+# This file contains functions for supporting ICP
 import numpy as np
 
 
@@ -84,6 +84,64 @@ def find_min_distance_point(moving_point, static_numpy):
             point = static_numpy[i]
     return point, distance
 
-def dot_product(p_i_dash,y_i_dash,a,b):  
-    dot_prod = np.dot(p_i_dash[:,a], y_i_dash[:,b])
+
+def dot_product(p_i_dash, y_i_dash, a, b):
+    dot_prod = np.dot(p_i_dash[:, a], y_i_dash[:, b])
     return dot_prod
+
+
+def find_alignment(Y, latest_moving_numpy):
+    mu_y = centroid(latest_moving_numpy)
+    mu_p = centroid(Y)
+
+    y_i_dash = latest_moving_numpy - mu_y
+    p_i_dash = Y - mu_p
+
+    S_xx = dot_product(p_i_dash, y_i_dash, 0, 0)
+    S_xy = dot_product(p_i_dash, y_i_dash, 0, 1)
+    S_xz = dot_product(p_i_dash, y_i_dash, 0, 2)
+    S_yx = dot_product(p_i_dash, y_i_dash, 1, 0)
+    S_yy = dot_product(p_i_dash, y_i_dash, 1, 1)
+    S_yz = dot_product(p_i_dash, y_i_dash, 1, 2)
+    S_zx = dot_product(p_i_dash, y_i_dash, 2, 0)
+    S_zy = dot_product(p_i_dash, y_i_dash, 2, 1)
+    S_zz = dot_product(p_i_dash, y_i_dash, 2, 2)
+
+    N = np.array([[S_xx + S_yy + S_zz, S_yz - S_zy, - S_xz + S_zx, S_xy - S_yz],
+                  [S_yz - S_zy, S_xx - S_zz - S_yy, S_xy + S_yx, S_xz + S_zx],
+                  [-S_xz + S_zx, S_xy + S_yx, S_yy - S_zz - S_xx, S_yz + S_zy],
+                  [S_xy - S_yz, S_xz + S_zx, S_yz + S_zy, S_zz - S_yy - S_xx]])
+
+    w, v = np.linalg.eig(N)
+    q = v[:, 0]
+
+    q0, q1, q2, q3 = q[0], q[1], q[2], q[3]
+
+    Q_bar = np.array([[q0, -q1, -q2, -q3],
+                      [q1, q0, q3, -q2],
+                      [q2, -q3, q0, q1],
+                      [q3, q2, -q1, q0]])
+
+    Q = np.array([[q0, -q1, -q2, -q3],
+                  [q1, q0, -q3, q2],
+                  [q2, q3, q0, -q1],
+                  [q3, -q2, q1, q0]])
+
+    R = np.matmul(np.transpose(Q_bar), Q)
+    R = R[1:, 1:]
+
+    Sp, D = 0, 0
+
+    for num in range(len(y_i_dash)):
+        D += np.matmul(np.transpose(y_i_dash[num]), y_i_dash[num])
+        Sp += np.matmul(np.transpose(p_i_dash[num]), p_i_dash[num])
+
+    s = np.sqrt(D / Sp)
+    t = mu_y - s * np.matmul(R, mu_p)
+
+    err = 0
+
+    for haha in range(len(y_i_dash)):
+        d = Y[haha] - (s * np.matmul(R, latest_moving_numpy[haha]) + t)
+        err += np.matmul(np.transpose(d), d)
+    return [s, R, t, err]
