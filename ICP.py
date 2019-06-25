@@ -1,47 +1,45 @@
-import open3d as o3d
+# This file contains custom implementation for ICP algorithm
+import Helper.helper_functions as helper
+import Helper.data_loader as loader
+import Helper.config as cfg
 import numpy as np
-import copy
 
+max_iterations = 100
+thresh = 0.001
 
-def draw_registration_result(source, target, transformation):
-    source_temp = copy.deepcopy(source)
-    target_temp = copy.deepcopy(target)
-    source_temp.paint_uniform_color([1, 0.706, 0])
-    target_temp.paint_uniform_color([0, 0.651, 0.929])
-    source_temp.transform(transformation)
-    o3d.visualization.draw_geometries([source_temp, target_temp])
+if cfg.USER is True:
+    static_cloud = str(input('Enter the path to the static point cloud: '))
+    moving_cloud = str(input('Enter the path to the moving point cloud: '))
+else:
+    static_cloud = 'Data/bun045.ply'
+    moving_cloud = 'Data/bun000.ply'
 
+# Visualizing the input clouds
+if cfg.VISUAL is True:
+    print("[INFO] Visualizing the static point cloud")
+    loader.display_beauty(static_cloud)
 
-if __name__ == "__main__":
-    source = o3d.io.read_point_cloud("../../TestData/ICP/cloud_bin_0.pcd")
-    target = o3d.io.read_point_cloud("../../TestData/ICP/cloud_bin_1.pcd")
-    threshold = 0.02
-    trans_init = np.asarray([[0.862, 0.011, -0.507, 0.5],
-                             [-0.139, 0.967, -0.215, 0.7],
-                             [0.487, 0.255, 0.835, -1.4],
-                             [0.0, 0.0, 0.0, 1.0]])
+    print("[INFO] Visualizing the moving point cloud")
+    loader.display_beauty(moving_cloud)
+else:
+    print('[INFO] Data not visualized.')
 
-    draw_registration_result(source, target, trans_init)
-    print("Initial alignment")
-    evaluation = o3d.registration.evaluate_registration(source, target,
-                                                        threshold, trans_init)
-    print(evaluation)
+static_numpy = loader.down_sampled_numpy(static_cloud)
+moving_numpy = loader.down_sampled_numpy(moving_cloud)
 
-    print("Apply point-to-point ICP")
-    reg_p2p = o3d.registration.registration_icp(
-        source, target, threshold, trans_init,
-        o3d.registration.TransformationEstimationPointToPoint())
-    print(reg_p2p)
-    print("Transformation is:")
-    print(reg_p2p.transformation)
-    print("")
-    draw_registration_result(source, target, reg_p2p.transformation)
-    print("Apply point-to-plane ICP")
-    reg_p2l = o3d.registration.registration_icp(
-        source, target, threshold, trans_init,
-        o3d.registration.TransformationEstimationPointToPlane())
-    print(reg_p2l)
-    print("Transformation is:")
-    print(reg_p2l.transformation)
-    print("")
-    draw_registration_result(source, target, reg_p2l.transformation)
+newP = moving_numpy
+Y_inp = np.zeros(moving_numpy.shape)
+
+for loop in range(max_iterations):
+    for sub_loop in range(len(static_numpy)):
+        Y_inp[sub_loop], _ = helper.find_min_distance_point(newP[sub_loop], static_numpy)
+    [s_, R_, T_, error] = helper.find_alignment(Y_inp, newP)
+
+    for lol in range(len(static_numpy)):
+        newP[lol] = s_ * np.matmul(R_, newP[lol]) + T_
+        e = Y_inp[lol] - newP[lol]
+        error += np.matmul(np.transpose(e), e)
+    error = error/len(static_numpy)
+    print("Error in loop {} is {}.".format(loop, error))
+    if error < thresh:
+        break
