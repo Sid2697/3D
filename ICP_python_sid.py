@@ -2,7 +2,6 @@
 import Helper.helper_functions as helper
 import Helper.data_loader as loader
 import Helper.config as cfg
-from scipy.io import savemat
 
 from tqdm import tqdm
 # import pptk
