@@ -2,12 +2,15 @@
 import Helper.helper_functions as helper
 import Helper.data_loader as loader
 import Helper.config as cfg
-from scipy.io import savemat
 
 from tqdm import tqdm
-# import pptk
+import pptk
 import numpy as np
 
+Q=[]
+# =============================================================================
+
+# =============================================================================
 
 if cfg.USER is True:
     static_cloud = str(input('Enter the path to the static point cloud: '))
@@ -17,7 +20,7 @@ else:
     moving_cloud = 'Data/bun000.ply'
 
 # Visualizing the input clouds
-if cfg.VISUAL is True:
+if cfg.VISUAL is False:
     print("[INFO] Visualizing the static point cloud")
     loader.display_beauty(static_cloud)
 
@@ -28,60 +31,77 @@ else:
 
 static_numpy = loader.down_sampled_numpy(static_cloud)
 moving_numpy = loader.down_sampled_numpy(moving_cloud)
+# =============================================================================
 # v1 = pptk.viewer(static_numpy)
 # v1.attributes(static_numpy + 100)
+# =============================================================================
 
-correspondence_dict = {}
+corresponding_points_dict = {}
 
 for i in tqdm(range(len(moving_numpy))):
     point, minimum = helper.find_min_distance_point(moving_numpy[i], static_numpy)
-    if 'Q' in correspondence_dict.keys():
-        correspondence_dict['Q'].append(point)
-    else:
-        correspondence_dict['Q'] = [point]
-    if 'p' in correspondence_dict.keys():
-        correspondence_dict['p'].append(moving_numpy[i])
-    else:
-        correspondence_dict['p'] = [moving_numpy[i]]
+    corresponding_points_dict[i] = [point, moving_numpy[i], minimum]
+    Q.append(point)
+    
+y_i = np.float64(Q)   
+# (corresponding points)
 
-mu_y = helper.centroid(correspondence_dict['Q'])
-mu_p = helper.centroid(correspondence_dict['p'])
+p_i = moving_numpy  
+# =============================================================================
+# A = np.array([1, 2, 3,8])
+# B = np.array([9, 3, 1,2])
+# =============================================================================
+mu_y = helper.centroid(y_i)   
+mu_p = helper.centroid(moving_numpy) 
 
-y_i_dash = correspondence_dict['Q'] - mu_y
-p_i_dash = correspondence_dict['p'] - mu_p
+y_i_dash = y_i - mu_y
+p_i_dash = p_i - mu_p
 
 
-S_xx = helper.dot_product(p_i_dash, y_i_dash, 0, 0)
-S_xy = helper.dot_product(p_i_dash, y_i_dash, 0, 1)
-S_xz = helper.dot_product(p_i_dash, y_i_dash, 0, 2)
-S_yx = helper.dot_product(p_i_dash, y_i_dash, 1, 0)
-S_yy = helper.dot_product(p_i_dash, y_i_dash, 1, 1)
-S_yz = helper.dot_product(p_i_dash, y_i_dash, 1, 2)
-S_zx = helper.dot_product(p_i_dash, y_i_dash, 2, 0)
-S_zy = helper.dot_product(p_i_dash, y_i_dash, 2, 1)
-S_zz = helper.dot_product(p_i_dash, y_i_dash, 2, 2)
+# =============================================================================
+# d = np.dot(A,B)
+# =============================================================================
+S_xx = helper.dot_product(p_i_dash,y_i_dash,0,0)
+S_xy = helper.dot_product(p_i_dash,y_i_dash,0,1)
+S_xz = helper.dot_product(p_i_dash,y_i_dash,0,2)
+S_yx = helper.dot_product(p_i_dash,y_i_dash,1,0)
+S_yy = helper.dot_product(p_i_dash,y_i_dash,1,1)
+S_yz = helper.dot_product(p_i_dash,y_i_dash,1,2)
+S_zx = helper.dot_product(p_i_dash,y_i_dash,2,0)
+S_zy = helper.dot_product(p_i_dash,y_i_dash,2,1)
+S_zz = helper.dot_product(p_i_dash,y_i_dash,2,2)
 
-N = np.array([[S_xx + S_yy + S_zz, S_yz - S_zy, - S_xz + S_zx, S_xy - S_yz],
-              [S_yz - S_zy, S_xx - S_zz - S_yy, S_xy + S_yx, S_xz + S_zx],
-              [-S_xz + S_zx, S_xy + S_yx, S_yy - S_zz - S_xx, S_yz + S_zy],
-              [S_xy - S_yz, S_xz + S_zx, S_yz + S_zy, S_zz - S_yy - S_xx]])
+N = np.array([[S_xx +S_yy+S_zz, S_yz-S_zy, -S_xz+S_zx, S_xy-S_yz],
+              [ S_yz-S_zy, S_xx -S_zz-S_yy, S_xy+S_yx, S_xz+S_zx],
+              [-S_xz+S_zx, S_xy+S_yx, S_yy-S_zz-S_xx, S_yz+S_zy],
+              [S_xy-S_yz, S_xz+S_zx, S_yz+S_zy, S_zz-S_yy-S_xx]])
+n = np.linalg.eigh(N)
+Eigen_values = n[0]
+Eigen_vector = n[1]
+#max_Eigen_value = Eigen_values.index(max(Eigen_values))
+m=[]
+for k in range (4):
+    m.append(Eigen_values[k])
 
-w, v = np.linalg.eig(N)
-q = v[:, 0]
+j = m.index(max(m))      
+q = Eigen_vector[:,j]
 
-q0, q1, q2, q3 = q[0], q[1], q[2], q[3]
+q0 = q[0]
+qx = q[1]
+qy = q[2]
+qz = q[3]
 
-Q_bar = np.array([[q0, -q1, -q2, -q3],
-                  [q1, q0, q3, -q2],
-                  [q2, -q3, q0, q1],
-                  [q3, q2, -q1, q0]])
+Qbar = np.array([[q0,-qx,-qy, -qz],
+                 [qx, q0, qz, -qy],
+                 [qy, -qz, q0, qx],
+                 [qz, -qy, qx, q0]])
+    
+Q = np.array([[q0,-qx,-qy, -qz],
+              [qx, q0, -qz, qy],
+              [qy, qz, q0, -qx],
+              [qz, -qy, qx, q0]])    
 
-Q = np.array([[q0, -q1, -q2, -q3],
-              [q1, q0, -q3, q2],
-              [q2, q3, q0, -q1],
-              [q3, -q2, q1, q0]])
-
-R = np.matmul(np.transpose(Q_bar), Q)
+R = np.matmul(np.transpose(Qbar), Q)
 R = R[1:, 1:]
-print('Rotation matrix is: \n{}'.format(R))
-
+print('Rotation matrix is: \n{}'.format(R))    
+    
