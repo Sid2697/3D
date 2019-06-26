@@ -107,22 +107,22 @@ def find_alignment(Y, latest_moving_numpy):
     S_zy = dot_product(p_i_dash, y_i_dash, 2, 1)
     S_zz = dot_product(p_i_dash, y_i_dash, 2, 2)
 
-    N = np.array([[S_xx + S_yy + S_zz, S_yz - S_zy, - S_xz + S_zx, S_xy - S_yz],
+    N = np.array([[S_xx + S_yy + S_zz, S_yz - S_zy, - S_xz + S_zx, S_xy - S_yx],
                   [S_yz - S_zy, S_xx - S_zz - S_yy, S_xy + S_yx, S_xz + S_zx],
                   [-S_xz + S_zx, S_xy + S_yx, S_yy - S_zz - S_xx, S_yz + S_zy],
-                  [S_xy - S_yz, S_xz + S_zx, S_yz + S_zy, S_zz - S_yy - S_xx]])
+                  [S_xy - S_yx, S_xz + S_zx, S_yz + S_zy, S_zz - S_yy - S_xx]])
 
     n = np.linalg.eigh(N)
     Eigen_values = n[0]
     Eigen_vector = n[1]
-#max_Eigen_value = Eigen_values.index(max(Eigen_values))
-    m=[]
-    for k in range (4):
+
+    m = []
+    for k in range(4):
         m.append(Eigen_values[k])
 
-    hj = m.index(max(m))      
-    q = Eigen_vector[:,hj]
-    
+    hj = m.index(max(m))
+    q = Eigen_vector[:, hj]
+
     q0, q1, q2, q3 = q[0], q[1], q[2], q[3]
 
     Q_bar = np.array([[q0, -q1, -q2, -q3],
@@ -137,7 +137,6 @@ def find_alignment(Y, latest_moving_numpy):
 
     R = np.matmul(np.transpose(Q_bar), Q)
     R = R[1:, 1:]
-
     Sp, D = 0, 0
 
     for num in range(len(y_i_dash)):
@@ -145,12 +144,12 @@ def find_alignment(Y, latest_moving_numpy):
         Sp += np.matmul(np.transpose(p_i_dash[num]), p_i_dash[num])
     Dtry = np.matmul(np.transpose(q), N)
     Dnew = np.matmul(Dtry, q)
-    s = Dnew / Sp
+    s = np.sqrt(D / Sp)
     t = mu_y - s * np.matmul(R, mu_p)
 
     err = 0
 
     for haha in range(len(y_i_dash)):
-        d = latest_moving_numpy[haha] - (s * np.matmul(R, Y[haha]) + t)
+        d = Y[haha] - (s * np.matmul(R, latest_moving_numpy[haha]) + t)
         err += np.matmul(np.transpose(d), d)
     return [s, R, t, err]
