@@ -1,6 +1,7 @@
 # This file contains functions for supporting ICP
 import numpy as np
-
+import copy
+import open3d as o3d
 
 def centroid(point_cloud):
     """
@@ -91,11 +92,11 @@ def dot_product(p_i_dash, y_i_dash, a, b):
 
 
 def find_alignment(Y, latest_moving_numpy):
-    mu_y = centroid(latest_moving_numpy)
-    mu_p = centroid(Y)
+    mu_y = centroid(Y)
+    mu_p = centroid(latest_moving_numpy)
 
-    y_i_dash = latest_moving_numpy - mu_y
-    p_i_dash = Y - mu_p
+    y_i_dash = Y - mu_y
+    p_i_dash = latest_moving_numpy - mu_p
 
     S_xx = dot_product(p_i_dash, y_i_dash, 0, 0)
     S_xy = dot_product(p_i_dash, y_i_dash, 0, 1)
@@ -112,9 +113,17 @@ def find_alignment(Y, latest_moving_numpy):
                   [-S_xz + S_zx, S_xy + S_yx, S_yy - S_zz - S_xx, S_yz + S_zy],
                   [S_xy - S_yz, S_xz + S_zx, S_yz + S_zy, S_zz - S_yy - S_xx]])
 
-    w, v = np.linalg.eig(N)
-    q = v[:, 0]
+    n = np.linalg.eigh(N)
+    Eigen_values = n[0]
+    Eigen_vector = n[1]
+#max_Eigen_value = Eigen_values.index(max(Eigen_values))
+    m=[]
+    for k in range (4):
+        m.append(Eigen_values[k])
 
+    hj = m.index(max(m))      
+    q = Eigen_vector[:,hj]
+    
     q0, q1, q2, q3 = q[0], q[1], q[2], q[3]
 
     Q_bar = np.array([[q0, -q1, -q2, -q3],
@@ -135,13 +144,14 @@ def find_alignment(Y, latest_moving_numpy):
     for num in range(len(y_i_dash)):
         D += np.matmul(np.transpose(y_i_dash[num]), y_i_dash[num])
         Sp += np.matmul(np.transpose(p_i_dash[num]), p_i_dash[num])
-
-    s = np.sqrt(D / Sp)
+    Dtry = np.matmul(np.transpose(q), N)
+    Dnew = np.matmul(Dtry, q)
+    s = np.sqrt(Dnew / Sp)
     t = mu_y - s * np.matmul(R, mu_p)
 
     err = 0
 
     for haha in range(len(y_i_dash)):
-        d = Y[haha] - (s * np.matmul(R, latest_moving_numpy[haha]) + t)
+        d = latest_moving_numpy[haha] - (s * np.matmul(R, Y[haha]) + t)
         err += np.matmul(np.transpose(d), d)
     return [s, R, t, err]
