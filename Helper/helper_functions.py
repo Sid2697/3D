@@ -1,7 +1,6 @@
 # This file contains functions for supporting ICP
 import numpy as np
-import copy
-import open3d as o3d
+
 
 def centroid(point_cloud):
     """
