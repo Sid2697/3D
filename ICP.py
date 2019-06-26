@@ -5,14 +5,14 @@ import Helper.config as cfg
 import numpy as np
 
 max_iterations = 100
-thresh = 0.001
+thresh = 0.000001
 
 if cfg.USER is True:
     static_cloud = str(input('Enter the path to the static point cloud: '))
     moving_cloud = str(input('Enter the path to the moving point cloud: '))
 else:
-    static_cloud = 'Data/bun045.ply'
-    moving_cloud = 'Data/bun000.ply'
+    static_cloud = 'Data/bun180.ply'
+    moving_cloud = 'Data/bun090.ply'
 
 # Visualizing the input clouds
 if cfg.VISUAL is True:
@@ -26,16 +26,20 @@ else:
 
 static_numpy = loader.down_sampled_numpy(static_cloud)
 moving_numpy = loader.down_sampled_numpy(moving_cloud)
+#file1 = open("yFile.txt","w") 
+#for i in range (len(static_numpy)):
+#    file1.writelines(str(static_numpy [i]))
+#file1.close() 
 
 newP = moving_numpy
 Y_inp = np.zeros(moving_numpy.shape)
 
 for loop in range(max_iterations):
-    for sub_loop in range(len(static_numpy)):
+    for sub_loop in range(min (len(moving_numpy),len(static_numpy))):
         Y_inp[sub_loop], _ = helper.find_min_distance_point(newP[sub_loop], static_numpy)
     [s_, R_, T_, error] = helper.find_alignment(Y_inp, newP)
 
-    for lol in range(len(static_numpy)):
+    for lol in range(min (len(moving_numpy),len(static_numpy))):
         newP[lol] = s_ * np.matmul(R_, newP[lol]) + T_
         e = Y_inp[lol] - newP[lol]
         error += np.matmul(np.transpose(e), e)
