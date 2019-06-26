@@ -68,5 +68,7 @@ def data_matlab(file_path, file_name):
 
 
 if __name__ == '__main__':
-    path = "C:\\Users\\Siddhant\\Desktop\\3D data\\Room_211.pts"
-    data_matlab(path, 'sid_trial')
+    path = "C:/Users/Siddhant/PycharmProjects/3D/Data/bun000.ply"
+    display_beauty(path)
+    path_1 = "C:/Users/Siddhant/PycharmProjects/3D/Data/bun045.ply"
+    display_beauty(path_1)

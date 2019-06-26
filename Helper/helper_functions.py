@@ -145,7 +145,7 @@ def find_alignment(Y, latest_moving_numpy):
         Sp += np.matmul(np.transpose(p_i_dash[num]), p_i_dash[num])
     Dtry = np.matmul(np.transpose(q), N)
     Dnew = np.matmul(Dtry, q)
-    s = np.sqrt(Dnew / Sp)
+    s = Dnew / Sp
     t = mu_y - s * np.matmul(R, mu_p)
 
     err = 0
