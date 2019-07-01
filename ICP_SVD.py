@@ -5,6 +5,7 @@ import Helper.config as cfg
 import numpy as np
 import pptk
 
+max_iter = 100
 
 if cfg.USER is True:
     static_cloud = str(input('Enter the path to the static point cloud: '))
@@ -19,27 +20,33 @@ else:
 static_numpy = loader.down_sampled_numpy(static_cloud)
 moving_numpy = loader.down_sampled_numpy(moving_cloud)
 
-static_centroid = help.centroid(static_numpy)
-moving_centroid = help.centroid(moving_numpy)
+latest_moved = moving_numpy
 
-static_centered = static_numpy - static_centroid
-moving_centered = moving_numpy - moving_centroid
+for i in range(max_iter):
+    static_centroid = help.centroid(static_numpy)
+    moving_centroid = help.centroid(latest_moved)
 
-if len(moving_centered) > len(static_centered):
-    moving_centered = moving_centered[:len(static_centered), :]
-else:
-    static_centered = static_centered[:len(moving_centered), :]
+    static_centered = static_numpy - static_centroid
+    moving_centered = latest_moved - moving_centroid
 
-S = np.matmul(static_centered, np.transpose(moving_centered))
+    if len(moving_centered) > len(static_centered):
+        moving_centered = moving_centered[:len(static_centered), :]
+    else:
+        static_centered = static_centered[:len(moving_centered), :]
 
-U, Sym, V_T = np.linalg.svd(S)
-iden = np.identity(len(moving_centered))
-iden[-1, -1] = np.linalg.det(np.matmul(np.transpose(V_T), np.transpose(U)))
+    S = np.matmul(static_centered, np.transpose(moving_centered))
 
-R = np.matmul(np.matmul(np.transpose(V_T), iden), np.transpose(U))
+    U, Sym, V_T = np.linalg.svd(S)
+    iden = np.identity(len(moving_centered))
+    iden[-1, -1] = np.linalg.det(np.matmul(np.transpose(V_T), np.transpose(U)))
 
-t = static_centered - np.matmul(R, moving_centered)
+    R = np.matmul(np.matmul(np.transpose(V_T), iden), np.transpose(U))
 
-new_moved = np.matmul(R, moving_centered) + t
-print(new_moved.shape)
-pptk.viewer(new_moved)
+    t = static_centered - np.matmul(R, moving_centered)
+
+    latest_moved = np.matmul(R, moving_centered) + t
+
+    if i % 10 == 0:
+        display = np.concatenate(static_numpy, latest_moved)
+        pptk.viewer(display)
+
